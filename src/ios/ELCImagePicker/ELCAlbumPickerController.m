@@ -8,6 +8,7 @@
 #import "ELCAlbumPickerController.h"
 #import "ELCImagePickerController.h"
 #import "ELCAssetTablePicker.h"
+#import "ELCAssetSelectionDelegate.h"
 
 @interface ELCAlbumPickerController ()
 
@@ -67,7 +68,7 @@
             // Group Enumerator Failure Block
             void (^assetGroupEnumberatorFailure)(NSError *) = ^(NSError *error) {
                 
-                UIAlertView * alert = [[UIAlertView alloc] initWithTitle:@"Error" message:[NSString stringWithFormat:@"Album Error: %@ - %@", [error localizedDescription], [error localizedRecoverySuggestion]] delegate:nil cancelButtonTitle:@"Ok" otherButtonTitles:nil];
+                UIAlertView * alert = [[UIAlertView alloc] initWithTitle:[NSString stringWithFormat:@"Autoriser %@ à accéder à vos photos", [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleDisplayName"]] message:@"L'accès a été refusé précédemment. Veuillez autoriser l'accès depuis les Réglages" delegate:self cancelButtonTitle:@"Ok" otherButtonTitles:@"Réglages", nil];
                 [alert show];
                 
                 NSLog(@"A problem occured %@", [error description]);	                                 
@@ -81,6 +82,26 @@
         }
     });    
 }
+
+
+// Delegate for camera permission UIAlertView
+- (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex
+{
+    // If Settings button (on iOS 8), open the settings app
+    if (buttonIndex == 1) {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wtautological-pointer-compare"
+        if (&UIApplicationOpenSettingsURLString != NULL) {
+            [[UIApplication sharedApplication] openURL:[NSURL URLWithString:UIApplicationOpenSettingsURLString]];
+        }
+#pragma clang diagnostic pop
+    }
+    
+    ELCImagePickerController* imagepicker = (ELCImagePickerController*)self.parent;
+    
+    [imagepicker.imagePickerDelegate elcImagePickerControllerDidCancel:nil];
+}
+
 
 - (void)reloadTableView
 {
@@ -161,4 +182,3 @@
 }
 
 @end
-
